@@ -3,6 +3,7 @@ const { exec } = require("child_process");
 const spawn = require("child_process").spawn;
 const constants = require("../constants.js");
 const UActor = require("../models/UActor");
+const uActorCtl = require("../services/UActorCtl");
 
 const ps = require("ps-node");
 
@@ -45,17 +46,6 @@ const remove = async (req, res) => {
     // TODO: check if the process with the dedicated pid is a process created with uActorBin
     let pid = Number(req.query.pid);
     if (!pid) return res.status(400).json("Request must have the parameter pid in the query!");
-    /*
-    exec(`kill ${pid}`, (err, stdout, stderr) => {
-        if (err || stderr) {
-            // node couldn't execute the command or something is wrong with the shell command
-            let errMsg = err ? err : stderr;
-            console.log(errMsg);
-            return res.status(500).json({ errMsg });
-        }
-        return res.status(200).json(pid);
-    });
-    */
     ps.kill(Number(pid), (err) => {
         if (err) {
             console.log(err);
@@ -66,8 +56,21 @@ const remove = async (req, res) => {
     });
 };
 
+const deploy = async (req, res) => {
+    let ctlArgument = JSON.parse(req.query.ctlArgument);
+    if (!ctlArgument) return res.status(400).json("Request must have the parameter ctlArgument in the query!");
+    try {
+        uActorCtl(ctlArgument);
+    } catch (err) {
+        console.error(err);
+        res.status(400).json(err);
+    }
+    res.status(200).json(ctlArgument);
+};
+
 module.exports = {
     create,
     read,
     remove,
+    deploy,
 };

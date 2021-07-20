@@ -4,11 +4,17 @@
   "description": "Install Packages:  ### `npm install`",
   "main": "server.js",
   "dependencies": {
+    "@msgpack/msgpack": "^2.7.0",
+    "blake2": "^4.0.2",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "fs": "0.0.1-security",
     "helmet": "^4.6.0",
     "http": "0.0.1-security",
+    "js-yaml": "^4.1.0",
+    "luamin": "^1.0.4",
+    "msgpack": "^1.0.3",
     "ps-node": "^0.1.6",
     "socket.io": "^4.1.3"
   },
