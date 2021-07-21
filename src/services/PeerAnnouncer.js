@@ -1,5 +1,5 @@
-import net from "net";
-import { encode } from "@msgpack/msgpack";
+const net = require("net");
+const { encode } = "@msgpack/msgpack";
 
 function Node(id, ip, port) {
     this.id = id;
@@ -53,6 +53,46 @@ function peerAnnouncer(nodes) {
     return true;
 }
 
-var peers = [new Node("example_node_1", "127.0.0.1", 5555), new Node("example_node_2", "127.0.0.1", 5556)];
+function sendNodeMessage(nodeIp, nodePort, nodeMsg) {
+    let t = Math.floor(new Date() / 1000);
+    let socket = new net.Socket();
+    socket.connect(nodePort, nodeIp, () => {
+        console.log("Connected " + node);
+        let peer_msg = Buffer.from(encode(nodeMsg));
+        // TODO: too many magic numbers!
+        let buf = Buffer.allocUnsafe(4);
+        buf.writeIntBE(peer_msg.length, 0, 4);
+        socket.write(buf);
+        socket.write(peer_msg);
+        let idx = 0;
+        while (idx < peer_msg.length) {
+            //let end = Math.min(idx + 10, peer_msg.length);
+            console.log(peer_msg.slice(idx + 10, end));
+            idx += 10;
+        }
+        t++;
+    });
 
-peerAnnouncer(peers);
+    let hasError = false;
+
+    socket.on("error", (err) => {
+        console.log("received error!");
+        hasError = true;
+        socket.destroy();
+    });
+
+    // TODO: current logic is, if no error throw after 1 second assume it succeeded
+    setTimeout(() => {
+        console.log(`Wait for 1 second`);
+        console.log("End connection");
+        console.log(`Sending message to ${nodeIp}:${nodePort}`);
+    }, 1000);
+
+    console.log("returned!");
+}
+
+//var peers = [new Node("example_node_1", "127.0.0.1", 5555), new Node("example_node_2", "127.0.0.1", 5556)];
+
+//peerAnnouncer(peers);
+
+module.exports = { peerAnnouncer, sendNodeMessage };

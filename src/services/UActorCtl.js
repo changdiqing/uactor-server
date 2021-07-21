@@ -91,6 +91,7 @@ function uActorCtl(args) {
             }
 
             let startPublish = new Date();
+            console.log("########### socket error of UActorCtl ###########");
             publish(socket, deployment, epoch, sequence_number);
             console.log(`Publish: ${deployment["deployment_name"]} ${new Date() - startPublish}`);
             setTimeout(() => {
@@ -144,6 +145,11 @@ function uActorCtl(args) {
 
     socket.on("data", (data) => {
         socket.destroy();
+    });
+
+    socket.on("error", (err) => {
+        socket.destroy();
+        throw err;
     });
 }
 
@@ -283,4 +289,4 @@ var testArguments = new CtlArguments(
 //uActorCtl(testArguments);
 
 //export default uActorCtl;
-module.exports = uActorCtl;
+module.exports = { uActorCtl };

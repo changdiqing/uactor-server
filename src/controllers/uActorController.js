@@ -3,7 +3,9 @@ const { exec } = require("child_process");
 const spawn = require("child_process").spawn;
 const constants = require("../constants.js");
 const UActor = require("../models/UActor");
-const uActorCtl = require("../services/UActorCtl");
+const { uActorCtl } = require("../services/UActorCtl");
+const net = require("net");
+const { encode } = require("@msgpack/msgpack");
 
 const ps = require("ps-node");
 
@@ -33,7 +35,7 @@ const read = async (req, res) => {
             // If first element is uActorBin, it is our uActor: extract the 2nd element (pid) and 9th element (port)
             // TODO: use constructor
             if (elements[0] === "uActorBin") {
-                uactors.push(UActor("Unknown Actor", elements[1], elements[8], elements[8]));
+                uactors.push(UActor("Unknown Node", elements[1], elements[8], elements[8]));
                 //uactors.push({ pid: elements[1], port: elements[8] });
             }
         });
@@ -68,9 +70,55 @@ const deploy = async (req, res) => {
     res.status(200).json(ctlArgument);
 };
 
+const sendMessage = async (req, res) => {
+    let ip = req.query.ip;
+    let port = req.query.port;
+    let msg = JSON.parse(req.query.message);
+    console.log(ip);
+    console.log(port);
+    console.log(msg);
+    if (!ip || !port || !msg)
+        return res.status(400).json("Request must have the parameter ip, port and message in the query!");
+
+    // TODO: code snipet for sending message, move to a separate function!
+    let t = Math.floor(new Date() / 1000);
+    let socket = new net.Socket();
+    socket.connect(port, ip, () => {
+        console.log("Connected " + ip + ":" + port);
+        let peer_msg = Buffer.from(encode(msg));
+        // TODO: too many magic numbers!
+        let buf = Buffer.allocUnsafe(4);
+        buf.writeIntBE(peer_msg.length, 0, 4);
+        socket.write(buf);
+        socket.write(peer_msg);
+        let idx = 0;
+        while (idx < peer_msg.length) {
+            let end = Math.min(idx + 10, peer_msg.length);
+            console.log(peer_msg.slice(idx + 10, end));
+            idx += 10;
+        }
+    });
+
+    socket.on("data", (data) => {
+        console.log("received data:");
+        console.log(data);
+
+        socket.destroy();
+        res.status(200).json(data.toString("utf8"));
+    });
+
+    socket.on("error", (err) => {
+        console.log("received error!");
+        let errMsg = err.code;
+        socket.destroy();
+        res.status(400).json(errMsg);
+    });
+};
+
 module.exports = {
     create,
     read,
     remove,
     deploy,
+    sendMessage,
 };

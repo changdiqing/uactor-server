@@ -20,6 +20,7 @@ router.get("/deploy", uActorController.deploy);
 router.post("/uactor", uActorController.create);
 router.get("/uactors", uActorController.read);
 router.delete("/remove-uactor", uActorController.remove);
+router.post("/message", uActorController.sendMessage);
 router.get("/files", FsController.readDir);
 router.get("/file", FsController.readFile);
 
